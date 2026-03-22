@@ -4,6 +4,8 @@ const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const PDFParser = require('pdf2json');
+const { initDB, pool } = require('./db');
+const { router: authRouter, requireAuth } = require('./auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,6 +14,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ── Auth routes ──
+app.use('/api/auth', authRouter);
+
+// ── File upload ──
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -27,22 +33,23 @@ const upload = multer({
   }
 });
 
+// ── Health ──
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', version: '1.0.0', name: 'PACE' });
+  res.json({ status: 'ok', version: '2.0.0', name: 'PACE' });
 });
 
+// ── PDF parser ──
 function parsePDF(buffer) {
   return new Promise((resolve, reject) => {
     const parser = new PDFParser(null, 1);
-    parser.on('pdfParser_dataReady', () => {
-      resolve(parser.getRawTextContent());
-    });
+    parser.on('pdfParser_dataReady', () => resolve(parser.getRawTextContent()));
     parser.on('pdfParser_dataError', err => reject(err));
     parser.parseBuffer(buffer);
   });
 }
 
-app.post('/api/upload', upload.single('file'), async (req, res) => {
+// ── Upload + save to DB ──
+app.post('/api/upload', requireAuth, upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
   let text = '';
@@ -55,15 +62,141 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
       text = req.file.buffer.toString('utf-8');
     }
 
-    const wordCount = text.split(/\s+/).filter(Boolean).length;
-    res.json({ filename: req.file.originalname, size: req.file.size, wordCount, text });
+    const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
+    const estimatedMinutes = Math.ceil(wordCount / 200);
+
+    const result = await pool.query(
+      `INSERT INTO documents (user_id, filename, content, word_count, estimated_minutes)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id, filename, word_count, estimated_minutes, uploaded_at`,
+      [req.user.userId, req.file.originalname, text, wordCount, estimatedMinutes]
+    );
+
+    res.json({
+      ...result.rows[0],
+      text,
+      wordCount,
+      estimatedMinutes
+    });
 
   } catch (err) {
     res.status(500).json({ error: 'Could not parse file: ' + err.message });
   }
 });
 
-app.post('/api/teach', async (req, res) => {
+// ── Get user's documents ──
+app.get('/api/documents', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, filename, word_count, estimated_minutes, uploaded_at
+       FROM documents WHERE user_id = $1 ORDER BY uploaded_at DESC`,
+      [req.user.userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Get single document ──
+app.get('/api/documents/:id', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM documents WHERE id = $1 AND user_id = $2',
+      [req.params.id, req.user.userId]
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: 'Document not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Delete document ──
+app.delete('/api/documents/:id', requireAuth, async (req, res) => {
+  try {
+    await pool.query(
+      'DELETE FROM documents WHERE id = $1 AND user_id = $2',
+      [req.params.id, req.user.userId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Create session ──
+app.post('/api/sessions', requireAuth, async (req, res) => {
+  const { document_id, time_budget_minutes } = req.body;
+  if (!document_id || !time_budget_minutes) {
+    return res.status(400).json({ error: 'document_id and time_budget_minutes required' });
+  }
+  try {
+    const result = await pool.query(
+      `INSERT INTO sessions (user_id, document_id, time_budget_minutes)
+       VALUES ($1, $2, $3) RETURNING *`,
+      [req.user.userId, document_id, time_budget_minutes]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Get sessions for document ──
+app.get('/api/sessions/:document_id', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM sessions WHERE user_id = $1 AND document_id = $2 ORDER BY created_at DESC`,
+      [req.user.userId, req.params.document_id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Save chunk progress ──
+app.post('/api/progress', requireAuth, async (req, res) => {
+  const { session_id, chunk_index, time_minutes, quiz_correct } = req.body;
+  try {
+    await pool.query(
+      `INSERT INTO chunk_progress (session_id, chunk_index, time_minutes, quiz_correct)
+       VALUES ($1, $2, $3, $4)`,
+      [session_id, chunk_index, time_minutes, quiz_correct]
+    );
+
+    await pool.query(
+      `UPDATE sessions SET
+         chunks_completed = chunks_completed + 1,
+         quiz_correct = quiz_correct + $1,
+         quiz_total = quiz_total + $2,
+         last_active = NOW()
+       WHERE id = $3`,
+      [quiz_correct ? 1 : 0, quiz_correct !== null ? 1 : 0, session_id]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Complete session ──
+app.patch('/api/sessions/:id/complete', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `UPDATE sessions SET completed = TRUE, last_active = NOW()
+       WHERE id = $1 AND user_id = $2 RETURNING *`,
+      [req.params.id, req.user.userId]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Teach (AI) ──
+app.post('/api/teach', requireAuth, async (req, res) => {
   const { system, user } = req.body;
   if (!system || !user) return res.status(400).json({ error: 'Missing prompts' });
   if (!process.env.ANTHROPIC_API_KEY) return res.status(500).json({ error: 'API key not set' });
@@ -92,10 +225,17 @@ app.post('/api/teach', async (req, res) => {
   }
 });
 
+// ── Catch-all ──
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`\n🎓 PACE is running at http://localhost:${PORT}\n`);
+// ── Start ──
+initDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`\n🎓 PACE is running at http://localhost:${PORT}\n`);
+  });
+}).catch(err => {
+  console.error('DB init failed:', err.message);
+  process.exit(1);
 });
