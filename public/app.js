@@ -1,5 +1,5 @@
-// ── PACE — Profile Analyze Curate Educate ──
-// Frontend logic — talks to local Express server
+// PACE — Profile Analyze Curate Educate
+// Frontend logic
 
 const API = {
   health: '/api/health',
@@ -7,7 +7,6 @@ const API = {
   teach:  '/api/teach'
 };
 
-// ── State ──
 let state = {
   level: 'intermediate',
   rawText: '',
@@ -19,46 +18,46 @@ let state = {
   adaptScore: 0
 };
 
-// ── DOM refs ──
 const $ = id => document.getElementById(id);
-const uploadBtn   = $('uploadBtn');
-const fileInput   = $('fileInput');
-const dropZone    = $('dropZone');
-const sourceScroll = $('sourceScroll');
-const sourceContent = $('sourceContent');
-const fileBar     = $('fileBar');
-const fileName    = $('fileName');
-const fileWords   = $('fileWords');
-const clearBtn    = $('clearBtn');
-const teachRow    = $('teachRow');
-const teachBtn    = $('teachBtn');
-const emptyState  = $('emptyState');
-const loadingState = $('loadingState');
-const loadingLabel = $('loadingLabel');
-const chunksContainer = $('chunksContainer');
-const progressBar = $('progressBar');
-const chunkCounter = $('chunkCounter');
-const adaptBadge  = $('adaptBadge');
-const adaptText   = $('adaptText');
-const healthDot   = $('healthDot');
 
-// ── Health check ──
+const uploadBtn      = $('uploadBtn');
+const fileInput      = $('fileInput');
+const dropZone       = $('dropZone');
+const sourceScroll   = $('sourceScroll');
+const sourceContent  = $('sourceContent');
+const fileBar        = $('fileBar');
+const fileName       = $('fileName');
+const fileWords      = $('fileWords');
+const clearBtn       = $('clearBtn');
+const teachRow       = $('teachRow');
+const teachBtn       = $('teachBtn');
+const emptyState     = $('emptyState');
+const loadingState   = $('loadingState');
+const loadingLabel   = $('loadingLabel');
+const chunksContainer = $('chunksContainer');
+const progressBar    = $('progressBar');
+const chunkCounter   = $('chunkCounter');
+const adaptBadge     = $('adaptBadge');
+const adaptText      = $('adaptText');
+const healthDot      = $('healthDot');
+
+// ── Health ──
 async function checkHealth() {
   try {
     const res = await fetch(API.health);
     const data = await res.json();
     if (data.status === 'ok') {
       healthDot.className = 'health-dot online';
-      healthDot.title = 'PACE server online';
+      healthDot.title = 'PACE online';
     }
   } catch {
     healthDot.className = 'health-dot offline';
-    healthDot.title = 'Server offline — run: npm start';
+    healthDot.title = 'Server offline';
   }
 }
 checkHealth();
 
-// ── Level pills ──
+// ── Level ──
 document.querySelectorAll('.level-pill').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.level-pill').forEach(b => b.classList.remove('active'));
@@ -67,7 +66,7 @@ document.querySelectorAll('.level-pill').forEach(btn => {
   });
 });
 
-// ── File upload ──
+// ── Upload ──
 uploadBtn.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
 
@@ -83,7 +82,6 @@ dropZone.addEventListener('drop', e => {
 async function handleFile(file) {
   const formData = new FormData();
   formData.append('file', file);
-
   try {
     const res = await fetch(API.upload, { method: 'POST', body: formData });
     const data = await res.json();
@@ -94,15 +92,14 @@ async function handleFile(file) {
 
     sourceContent.textContent = data.text;
     fileName.textContent = data.filename;
-    fileWords.textContent = `${data.wordCount.toLocaleString()} words`;
+    fileWords.textContent = `${(data.wordCount || 0).toLocaleString()} WORDS`;
 
     dropZone.style.display = 'none';
     sourceScroll.style.display = 'block';
     fileBar.style.display = 'flex';
     teachRow.style.display = 'block';
-
   } catch (err) {
-    showError('Upload failed: ' + err.message);
+    showError('UPLOAD FAILED: ' + err.message);
   }
 }
 
@@ -110,7 +107,7 @@ async function handleFile(file) {
 clearBtn.addEventListener('click', resetAll);
 
 function resetAll() {
-  state = { level: state.level, rawText: '', filename: '', chunks: [], currentIdx: 0, correct: 0, total: 0, adaptScore: 0 };
+  state = { ...state, rawText: '', filename: '', chunks: [], currentIdx: 0, correct: 0, total: 0, adaptScore: 0 };
   sourceContent.textContent = '';
   dropZone.style.display = 'flex';
   sourceScroll.style.display = 'none';
@@ -132,12 +129,12 @@ async function startLesson() {
   if (!state.rawText) return;
 
   teachBtn.disabled = true;
-  teachBtn.innerHTML = '<span class="teach-icon">⏳</span> Profiling…';
+  teachBtn.textContent = 'PROFILING...';
 
   emptyState.style.display = 'none';
   chunksContainer.innerHTML = '';
   loadingState.classList.add('visible');
-  loadingLabel.textContent = 'Profiling your material…';
+  loadingLabel.textContent = 'PROFILING';
 
   state.chunks = [];
   state.currentIdx = 0;
@@ -146,7 +143,7 @@ async function startLesson() {
   state.adaptScore = 0;
 
   try {
-    loadingLabel.textContent = 'Curating your lesson…';
+    loadingLabel.textContent = 'CURATING';
     const { system, user } = buildPrompt(state.rawText, state.level);
     const res = await fetch(API.teach, {
       method: 'POST',
@@ -162,7 +159,7 @@ async function startLesson() {
     loadingState.classList.remove('visible');
 
     if (state.chunks.length === 0) {
-      showError('Could not parse lesson. Try a different file.');
+      showError('COULD NOT PARSE LESSON. TRY ANOTHER FILE.');
       return;
     }
 
@@ -171,14 +168,14 @@ async function startLesson() {
 
   } catch (err) {
     loadingState.classList.remove('visible');
-    showError('Error: ' + err.message);
+    showError('ERROR: ' + err.message);
   } finally {
     teachBtn.disabled = false;
-    teachBtn.innerHTML = '<span class="teach-icon">✦</span> Teach Me This';
+    teachBtn.textContent = 'TEACH ME THIS';
   }
 }
 
-// ── Prompt builder ──
+// ── Prompt ──
 function buildPrompt(text, level) {
   const levelGuide = {
     beginner:     'Use simple language. Define all jargon. Use relatable analogies. Never assume prior knowledge.',
@@ -187,17 +184,17 @@ function buildPrompt(text, level) {
   }[level];
 
   return {
-    system: `You are PACE — an expert adaptive educator. Transform raw technical content into a structured bite-sized lesson for the specified level. Return ONLY valid JSON, no markdown fences, no preamble.
+    system: `You are PACE — an expert adaptive educator. Transform raw technical content into a structured bite-sized lesson. Return ONLY valid JSON, no markdown fences, no preamble.
 
 JSON structure:
 {
   "chunks": [
     {
       "id": 1,
-      "title": "short title",
+      "title": "SHORT TITLE",
       "body": "markdown content",
-      "callouts": [{"title": "Key Concept", "text": "explanation"}],
-      "highlights": [{"title": "Remember", "text": "key takeaway"}],
+      "callouts": [{"title": "KEY CONCEPT", "text": "explanation"}],
+      "highlights": [{"title": "REMEMBER", "text": "key takeaway"}],
       "quiz": {
         "question": "...",
         "options": ["A", "B", "C", "D"],
@@ -209,13 +206,13 @@ JSON structure:
 }
 
 Rules:
-- Split into 4–8 chunks. Each chunk = one focused idea.
+- Split into 4-8 chunks. Each chunk = one focused idea.
 - Level "${level}": ${levelGuide}
-- body: clean markdown. Use fenced code blocks for code.
-- callouts: 1–2 per chunk. Key concepts, warnings, pro tips.
-- highlights: 1 per chunk. Most important single takeaway.
-- quiz: ONE multiple choice question (4 options). correct = 0-indexed integer.
-- Tone: direct, warm, confident. Like a senior engineer teaching a colleague.`,
+- body: clean markdown. Fenced code blocks for code.
+- callouts: 1-2 per chunk.
+- highlights: 1 per chunk. Most important takeaway.
+- quiz: ONE multiple choice (4 options). correct = 0-indexed integer.
+- Tone: direct, precise, no filler.`,
     user: `Transform this into an adaptive PACE lesson:\n\n${text.slice(0, 8000)}`
   };
 }
@@ -235,13 +232,13 @@ function renderChunk(idx) {
 
   const calloutsHTML = (chunk.callouts || []).map(c => `
     <div class="callout">
-      <div class="callout-title">// ${c.title}</div>
+      <div class="callout-title">${c.title}</div>
       <p>${c.text}</p>
     </div>`).join('');
 
   const highlightsHTML = (chunk.highlights || []).map(h => `
     <div class="highlight-box">
-      <div class="highlight-title">★ ${h.title}</div>
+      <div class="highlight-title">${h.title}</div>
       <p>${h.text}</p>
     </div>`).join('');
 
@@ -251,7 +248,7 @@ function renderChunk(idx) {
     const qid = `quiz-${idx}`;
     quizHTML = `
       <div class="quiz-block" id="${qid}">
-        <div class="quiz-label">✦ Check Understanding</div>
+        <div class="quiz-label">CHECK UNDERSTANDING</div>
         <div class="quiz-q">${chunk.quiz.question}</div>
         <div class="quiz-options" id="${qid}-opts">
           ${chunk.quiz.options.map((opt, i) => `
@@ -260,7 +257,7 @@ function renderChunk(idx) {
               data-correct="${chunk.quiz.correct}"
               data-chunk="${idx}"
               data-expl="${encodeURIComponent(chunk.quiz.explanation || '')}">
-              <strong>${String.fromCharCode(65 + i)}.</strong> ${opt}
+              ${String.fromCharCode(65 + i)}. ${opt}
             </button>`).join('')}
         </div>
         <div class="quiz-feedback" id="${qid}-fb"></div>
@@ -270,17 +267,17 @@ function renderChunk(idx) {
   const isLast = idx === state.chunks.length - 1;
 
   el.innerHTML = `
-    <div class="chunk-num">Part ${idx + 1} of ${state.chunks.length} &nbsp;·&nbsp; ${chunk.title || ''}</div>
+    <div class="chunk-num">${String(idx + 1).padStart(2, '0')} / ${String(state.chunks.length).padStart(2, '0')}</div>
+    <div class="chunk-title">${chunk.title || ''}</div>
     <div class="chunk-body">${bodyHTML}</div>
     ${calloutsHTML}
     ${highlightsHTML}
     ${quizHTML}
-    <button class="continue-btn" id="cont-${idx}">${isLast ? '✦ Finish Lesson' : '→ Continue'}</button>
+    <button class="continue-btn" id="cont-${idx}">${isLast ? 'COMPLETE' : 'CONTINUE'}</button>
   `;
 
   chunksContainer.appendChild(el);
 
-  // Quiz listeners
   if (chunk.quiz) {
     el.querySelectorAll('.quiz-option').forEach(btn => {
       btn.addEventListener('click', function () { handleAnswer(this, idx); });
@@ -297,12 +294,10 @@ function renderChunk(idx) {
     }, 120);
   });
 
-  setTimeout(() => {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 100);
+  setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 }
 
-// ── Quiz answer ──
+// ── Quiz ──
 function handleAnswer(btn, chunkIdx) {
   const qid = `quiz-${chunkIdx}`;
   const chosen = parseInt(btn.dataset.qidx);
@@ -317,67 +312,60 @@ function handleAnswer(btn, chunkIdx) {
   if (!isCorrect) btn.classList.add('wrong');
 
   const fb = $(`${qid}-fb`);
-  fb.textContent = isCorrect ? `✓  Correct — ${expl}` : `✗  Not quite — ${expl}`;
+  fb.textContent = isCorrect ? `CORRECT — ${expl}` : `INCORRECT — ${expl}`;
   fb.classList.add('show');
 
   if (isCorrect) { state.correct++; state.adaptScore++; }
   else { state.adaptScore--; }
 
   updateAdaptBadge();
-
   document.getElementById(`cont-${chunkIdx}`).classList.add('show');
 }
 
 // ── Progress ──
 function updateProgress() {
   const pct = state.chunks.length > 0
-    ? Math.round((state.currentIdx / state.chunks.length) * 100)
-    : 0;
+    ? Math.round((state.currentIdx / state.chunks.length) * 100) : 0;
   progressBar.style.width = pct + '%';
   chunkCounter.textContent = state.chunks.length > 0
-    ? `${Math.min(state.currentIdx + 1, state.chunks.length)} / ${state.chunks.length}`
-    : '';
+    ? `${String(state.currentIdx + 1).padStart(2,'0')} / ${String(state.chunks.length).padStart(2,'0')}` : '';
 }
 
 // ── Adapt badge ──
 function updateAdaptBadge() {
   if (state.adaptScore >= 2) {
     adaptBadge.className = 'adapt-badge active';
-    adaptText.textContent = 'On a Roll';
+    adaptText.textContent = 'ON A ROLL';
   } else if (state.adaptScore <= -2) {
     adaptBadge.className = 'adapt-badge';
-    adaptText.textContent = 'Keep Going';
+    adaptText.textContent = 'KEEP GOING';
   } else {
     adaptBadge.className = 'adapt-badge active';
-    adaptText.textContent = 'Adapting';
+    adaptText.textContent = 'ADAPTING';
   }
 }
 
 // ── Done ──
 function showDone() {
   progressBar.style.width = '100%';
-  chunkCounter.textContent = 'Complete ✓';
+  chunkCounter.textContent = 'COMPLETE';
 
   const pct = state.total > 0 ? Math.round((state.correct / state.total) * 100) : null;
   const hint = pct !== null && pct < 60
-    ? `Consider switching to <strong>${state.level === 'advanced' ? 'Intermediate' : 'Beginner'}</strong> level for a deeper walkthrough.`
-    : pct === 100
-    ? `Perfect score. Consider pushing to <strong>${state.level === 'beginner' ? 'Intermediate' : 'Advanced'}</strong> next time.`
+    ? `CONSIDER SWITCHING TO ${state.level === 'advanced' ? 'INTERMEDIATE' : 'BEGINNER'} LEVEL.`
+    : pct === 100 ? `PERFECT SCORE. TRY ${state.level === 'beginner' ? 'INTERMEDIATE' : 'ADVANCED'} NEXT.`
     : null;
 
   const banner = document.createElement('div');
   banner.className = 'done-banner';
   banner.innerHTML = `
-    <div class="done-title">Lesson Complete</div>
-    <div class="done-sub">You worked through all ${state.chunks.length} sections of ${state.filename}</div>
-    ${pct !== null ? `<div class="score-display">${state.correct} / ${state.total} correct &nbsp;·&nbsp; ${pct}%</div>` : ''}
-    ${hint ? `<div class="done-hint">${hint}</div>` : ''}
+    <div class="done-title">COMPLETE</div>
+    <div class="done-sub">${state.filename} — ${state.chunks.length} SECTIONS</div>
+    ${pct !== null ? `<div class="score-display">${state.correct} / ${state.total} CORRECT · ${pct}%</div>` : ''}
+    ${hint ? `<span class="done-hint">${hint}</span>` : ''}
   `;
   chunksContainer.appendChild(banner);
-
-  setTimeout(() => {
-    banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 100);
+  setTimeout(() => banner.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 }
 
 // ── Helpers ──
@@ -395,7 +383,7 @@ function showError(msg) {
   loadingState.classList.remove('visible');
   emptyState.style.display = 'none';
   chunksContainer.innerHTML = `
-    <div style="padding:24px;font-family:var(--font-mono);font-size:12px;color:var(--accent-red);border:1px dashed var(--accent-red);border-radius:4px;">
-      ✗ ${msg}
+    <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--gray-4);padding:20px 0;border-top:1px solid var(--gray-3);">
+      ${msg}
     </div>`;
 }

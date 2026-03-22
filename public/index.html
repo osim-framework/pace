@@ -3,122 +3,97 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PACE — Profile Analyze Curate Educate</title>
+  <title>PACE</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 </head>
 <body>
 
-  <!-- HEADER -->
   <header class="header">
     <div class="header-left">
-      <div class="logo">
-        <span class="logo-mark">P</span>
-        <div class="logo-text">
-          <span class="logo-title">PACE</span>
-          <span class="logo-sub">Profile · Analyze · Curate · Educate</span>
-        </div>
-      </div>
+      <span class="logo">PACE</span>
+      <span class="logo-sub">PROFILE · ANALYZE · CURATE · EDUCATE</span>
     </div>
-
     <div class="header-center">
-      <span class="level-label">Level</span>
       <div class="level-pills">
-        <button class="level-pill" data-level="beginner">Beginner</button>
-        <button class="level-pill active" data-level="intermediate">Intermediate</button>
-        <button class="level-pill" data-level="advanced">Advanced</button>
+        <button class="level-pill" data-level="beginner">BEGINNER</button>
+        <button class="level-pill active" data-level="intermediate">INTERMEDIATE</button>
+        <button class="level-pill" data-level="advanced">ADVANCED</button>
       </div>
     </div>
-
     <div class="header-right">
-      <div class="adapt-badge" id="adaptBadge">
-        <span class="adapt-dot"></span>
-        <span id="adaptText">Adapting</span>
-      </div>
-      <div class="health-dot" id="healthDot" title="Server status"></div>
+      <span class="adapt-badge" id="adaptBadge">
+        <span class="adapt-dot" id="adaptDot"></span>
+        <span id="adaptText">ADAPTING</span>
+      </span>
+      <span class="health-dot" id="healthDot"></span>
     </div>
   </header>
 
-  <!-- MAIN SPLIT -->
   <main class="split">
 
-    <!-- LEFT: SOURCE -->
     <section class="panel panel-left">
       <div class="panel-header">
-        <span class="panel-title">// source material</span>
-        <button class="btn-upload" id="uploadBtn">+ Upload File</button>
+        <span class="panel-label">SOURCE</span>
+        <button class="btn-upload" id="uploadBtn">UPLOAD</button>
         <input type="file" id="fileInput" accept=".md,.txt,.js,.ts,.py,.html,.css,.json,.jsx,.tsx,.rs,.go,.java,.cpp,.c,.yaml,.yml,.pdf" hidden />
       </div>
 
-      <!-- Drop Zone -->
       <div class="drop-zone" id="dropZone">
-        <div class="drop-icon">⬆</div>
-        <p class="drop-title">Drop file here</p>
-        <p class="drop-sub">.md · .txt · .js · .py · .ts · .html · .json · and more</p>
-        <div class="chalk-line"></div>
+        <div class="drop-cross">
+          <span class="cross-h"></span>
+          <span class="cross-v"></span>
+        </div>
+        <p class="drop-title">DROP FILE</p>
+        <p class="drop-sub">.PDF .MD .TXT .JS .PY .TS .HTML .JSON</p>
       </div>
 
-      <!-- Source Preview -->
       <div class="source-scroll" id="sourceScroll">
         <pre class="source-content" id="sourceContent"></pre>
       </div>
 
-      <!-- File Info Bar -->
       <div class="file-bar" id="fileBar">
-        <span class="file-icon">◈</span>
         <span class="file-name" id="fileName"></span>
         <span class="file-words" id="fileWords"></span>
-        <button class="btn-clear" id="clearBtn">✕</button>
+        <button class="btn-clear" id="clearBtn">CLEAR</button>
       </div>
 
-      <!-- Teach Button -->
       <div class="teach-row" id="teachRow">
-        <button class="btn-teach" id="teachBtn">
-          <span class="teach-icon">✦</span>
-          Teach Me This
-        </button>
+        <button class="btn-teach" id="teachBtn">TEACH ME THIS</button>
       </div>
     </section>
 
-    <!-- RIGHT: ADAPTIVE OUTPUT -->
     <section class="panel panel-right">
       <div class="panel-header panel-header-right">
-        <span class="panel-title">// adaptive output</span>
-        <div class="progress-wrap">
-          <div class="progress-bar" id="progressBar"></div>
+        <span class="panel-label">OUTPUT</span>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressBar"></div>
         </div>
         <span class="chunk-counter" id="chunkCounter"></span>
       </div>
 
       <div class="output-scroll" id="outputScroll">
 
-        <!-- Empty State -->
         <div class="empty-state" id="emptyState">
-          <div class="empty-board">
-            <div class="board-grid"></div>
-            <div class="empty-content">
-              <div class="empty-icon">🎓</div>
-              <p class="empty-title">Upload a file to begin</p>
-              <p class="empty-sub">PACE will profile your material and deliver<br/>an adaptive lesson tuned to your level</p>
-              <div class="empty-steps">
-                <div class="step"><span class="step-num">01</span><span>Upload source material</span></div>
-                <div class="step"><span class="step-num">02</span><span>Set your learning level</span></div>
-                <div class="step"><span class="step-num">03</span><span>Click Teach Me This</span></div>
-                <div class="step"><span class="step-num">04</span><span>Learn at your pace</span></div>
-              </div>
+          <div class="empty-inner">
+            <p class="empty-heading">NO INPUT</p>
+            <div class="empty-rule"></div>
+            <div class="empty-steps">
+              <div class="e-step"><span class="e-num">01</span><span class="e-text">UPLOAD SOURCE MATERIAL</span></div>
+              <div class="e-step"><span class="e-num">02</span><span class="e-text">SET LEARNING LEVEL</span></div>
+              <div class="e-step"><span class="e-num">03</span><span class="e-text">INITIATE LESSON</span></div>
+              <div class="e-step"><span class="e-num">04</span><span class="e-text">LEARN AT YOUR PACE</span></div>
             </div>
           </div>
         </div>
 
-        <!-- Loading State -->
         <div class="loading-state" id="loadingState">
-          <div class="chalk-dots">
-            <span></span><span></span><span></span>
+          <div class="loading-bars">
+            <span></span><span></span><span></span><span></span><span></span>
           </div>
-          <p class="loading-label" id="loadingLabel">Profiling your material…</p>
+          <p class="loading-label" id="loadingLabel">PROFILING</p>
         </div>
 
-        <!-- Chunks Container -->
         <div id="chunksContainer"></div>
 
       </div>
