@@ -16,14 +16,20 @@
       <span class="logo">PACE</span>
       <span class="logo-sub">PROFILE · ANALYZE · CURATE · EDUCATE</span>
     </div>
+
     <div class="header-center">
+      <div class="view-tabs">
+        <button class="view-tab active" id="tabLearn">LEARN</button>
+        <button class="view-tab" id="tabSources">SOURCES</button>
+      </div>
+    </div>
+
+    <div class="header-right">
       <div class="level-pills">
         <button class="level-pill" data-level="beginner">BEGINNER</button>
         <button class="level-pill active" data-level="intermediate">INTERMEDIATE</button>
         <button class="level-pill" data-level="advanced">ADVANCED</button>
       </div>
-    </div>
-    <div class="header-right">
       <span class="adapt-badge" id="adaptBadge">
         <span class="adapt-dot"></span>
         <span id="adaptText">ADAPTING</span>
@@ -34,49 +40,13 @@
     </div>
   </header>
 
-  <main class="split">
+  <!-- ── LEARN VIEW ── -->
+  <div class="view" id="viewLearn">
 
-    <!-- LEFT PANEL -->
-    <section class="panel panel-left">
-      <div class="panel-header">
-        <span class="panel-label">SOURCE</span>
-        <button class="btn-upload" id="uploadBtn">UPLOAD</button>
-        <input type="file" id="fileInput" accept=".md,.txt,.js,.ts,.py,.html,.css,.json,.jsx,.tsx,.rs,.go,.java,.cpp,.c,.yaml,.yml,.pdf" hidden />
-      </div>
-
-      <!-- Library -->
-      <div class="library" id="library">
-        <div class="library-empty" id="libraryEmpty">
-          <div class="drop-cross">
-            <span class="cross-h"></span>
-            <span class="cross-v"></span>
-          </div>
-          <p class="drop-title">DROP FILE</p>
-          <p class="drop-sub">.PDF .MD .TXT .JS .PY .TS .HTML .JSON</p>
-        </div>
-        <div class="library-list" id="libraryList"></div>
-      </div>
-
-      <!-- PDF Viewer -->
-      <div class="pdf-viewer" id="pdfViewer" style="display:none">
-        <div class="pdf-toolbar">
-          <button class="pdf-nav" id="pdfPrev">PREV</button>
-          <span class="pdf-page-info" id="pdfPageInfo">1 / 1</span>
-          <button class="pdf-nav" id="pdfNext">NEXT</button>
-        </div>
-        <div class="pdf-canvas-wrap">
-          <canvas id="pdfCanvas"></canvas>
-        </div>
-      </div>
-
-      <!-- Text viewer (non-PDF) -->
-      <div class="source-scroll" id="sourceScroll">
-        <pre class="source-content" id="sourceContent"></pre>
-      </div>
-
-      <!-- Time picker -->
-      <div class="time-picker" id="timePicker" style="display:none">
-        <div class="time-label">SESSION LENGTH</div>
+    <!-- Session bar -->
+    <div class="session-bar">
+      <span class="session-doc" id="sessionDocName">NO SOURCE SELECTED — GO TO SOURCES</span>
+      <div class="session-controls" id="sessionControls" style="display:none">
         <div class="time-options">
           <button class="time-opt" data-minutes="60">1 HR</button>
           <button class="time-opt" data-minutes="180">3 HR</button>
@@ -85,75 +55,101 @@
           <button class="time-opt time-opt-custom" id="timeCustom">CUSTOM</button>
         </div>
         <div class="time-custom-row" id="timeCustomRow" style="display:none">
-          <input type="number" class="time-input" id="timeCustomVal" min="5" max="1440" placeholder="MINUTES" />
+          <input type="number" class="time-input" id="timeCustomVal" min="5" max="1440" placeholder="MIN" />
           <button class="time-confirm" id="timeConfirmBtn">SET</button>
         </div>
-        <div class="doc-meta" id="docMeta"></div>
+        <button class="btn-teach" id="teachBtn" style="display:none">TEACH ME THIS</button>
       </div>
-
-      <!-- Doc progress bar -->
-      <div class="doc-progress-bar" id="docProgressBar" style="display:none">
-        <div class="doc-progress-header">
-          <span class="doc-progress-label">DOCUMENT PROGRESS</span>
-          <span class="doc-progress-pct" id="docProgressPct">0%</span>
-        </div>
-        <div class="doc-progress-track">
-          <div class="doc-progress-fill" id="docProgressFill"></div>
-        </div>
-        <div class="doc-progress-remain" id="docProgressRemain"></div>
-      </div>
-
-      <!-- File bar -->
-      <div class="file-bar" id="fileBar" style="display:none">
-        <span class="file-name" id="fileName"></span>
-        <span class="file-words" id="fileWords"></span>
-        <button class="btn-clear" id="clearBtn">CLEAR</button>
-      </div>
-
-      <!-- Teach row -->
-      <div class="teach-row" id="teachRow" style="display:none">
-        <button class="btn-teach" id="teachBtn">TEACH ME THIS</button>
-      </div>
-    </section>
-
-    <!-- RIGHT PANEL -->
-    <section class="panel panel-right">
-      <div class="panel-header panel-header-right">
-        <span class="panel-label">OUTPUT</span>
+      <div class="session-progress">
         <div class="progress-track">
           <div class="progress-fill" id="progressBar"></div>
         </div>
         <span class="chunk-counter" id="chunkCounter"></span>
       </div>
+    </div>
 
-      <div class="output-scroll" id="outputScroll">
+    <!-- Split: PDF left, lesson right -->
+    <div class="learn-split">
 
-        <div class="empty-state" id="emptyState">
-          <div class="empty-inner">
-            <p class="empty-heading">NO INPUT</p>
-            <div class="empty-rule"></div>
-            <div class="empty-steps">
-              <div class="e-step"><span class="e-num">01</span><span class="e-text">UPLOAD SOURCE MATERIAL</span></div>
-              <div class="e-step"><span class="e-num">02</span><span class="e-text">SET SESSION LENGTH</span></div>
-              <div class="e-step"><span class="e-num">03</span><span class="e-text">SET LEARNING LEVEL</span></div>
-              <div class="e-step"><span class="e-num">04</span><span class="e-text">INITIATE LESSON</span></div>
+      <!-- PDF PANEL -->
+      <div class="pdf-panel" id="pdfPanel">
+        <div class="pdf-empty" id="pdfEmpty">
+          <div class="drop-cross">
+            <span class="cross-h"></span>
+            <span class="cross-v"></span>
+          </div>
+          <p class="pdf-empty-title">NO SOURCE</p>
+          <p class="pdf-empty-sub">SELECT A SOURCE FROM THE SOURCES TAB</p>
+        </div>
+        <div class="pdf-viewer" id="pdfViewer" style="display:none">
+          <div class="pdf-toolbar">
+            <button class="pdf-nav" id="pdfPrev">PREV</button>
+            <span class="pdf-page-info" id="pdfPageInfo">1 / 1</span>
+            <button class="pdf-nav" id="pdfNext">NEXT</button>
+          </div>
+          <div class="pdf-canvas-wrap" id="pdfCanvasWrap">
+            <canvas id="pdfCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- LESSON PANEL -->
+      <div class="lesson-panel">
+        <div class="lesson-scroll" id="outputScroll">
+
+          <div class="empty-state" id="emptyState">
+            <div class="empty-inner">
+              <p class="empty-heading">NO INPUT</p>
+              <div class="empty-rule"></div>
+              <div class="empty-steps">
+                <div class="e-step"><span class="e-num">01</span><span class="e-text">GO TO SOURCES · UPLOAD A FILE</span></div>
+                <div class="e-step"><span class="e-num">02</span><span class="e-text">SELECT A SOURCE TO STUDY</span></div>
+                <div class="e-step"><span class="e-num">03</span><span class="e-text">SET SESSION LENGTH</span></div>
+                <div class="e-step"><span class="e-num">04</span><span class="e-text">CLICK TEACH ME THIS</span></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="loading-state" id="loadingState">
-          <div class="loading-bars">
-            <span></span><span></span><span></span><span></span><span></span>
+          <div class="loading-state" id="loadingState">
+            <div class="loading-bars">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <p class="loading-label" id="loadingLabel">PROFILING</p>
           </div>
-          <p class="loading-label" id="loadingLabel">PROFILING</p>
+
+          <div id="chunksContainer"></div>
+
         </div>
-
-        <div id="chunksContainer"></div>
-
       </div>
-    </section>
 
-  </main>
+    </div>
+  </div>
+
+  <!-- ── SOURCES VIEW ── -->
+  <div class="view" id="viewSources" style="display:none">
+
+    <div class="sources-bar">
+      <span class="sources-title">SOURCES</span>
+      <button class="btn-upload" id="uploadBtn">+ UPLOAD FILE</button>
+      <input type="file" id="fileInput" accept=".md,.txt,.js,.ts,.py,.html,.css,.json,.jsx,.tsx,.rs,.go,.java,.cpp,.c,.yaml,.yml,.pdf" hidden />
+    </div>
+
+    <div class="sources-body">
+
+      <div class="sources-empty" id="sourcesEmpty">
+        <div class="drop-cross">
+          <span class="cross-h"></span>
+          <span class="cross-v"></span>
+        </div>
+        <p class="drop-title">NO SOURCES</p>
+        <p class="drop-sub">UPLOAD A FILE TO GET STARTED</p>
+      </div>
+
+      <div class="sources-list" id="sourcesList"></div>
+
+    </div>
+
+  </div>
 
   <script src="app.js"></script>
 </body>
