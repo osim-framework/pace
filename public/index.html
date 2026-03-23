@@ -6,9 +6,11 @@
   <title>PACE</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
+  <!-- HEADER -->
   <header class="header">
     <div class="header-left">
       <span class="logo">PACE</span>
@@ -23,15 +25,18 @@
     </div>
     <div class="header-right">
       <span class="adapt-badge" id="adaptBadge">
-        <span class="adapt-dot" id="adaptDot"></span>
+        <span class="adapt-dot"></span>
         <span id="adaptText">ADAPTING</span>
       </span>
+      <span class="user-email" id="userEmail"></span>
+      <button class="btn-logout" id="logoutBtn">LOGOUT</button>
       <span class="health-dot" id="healthDot"></span>
     </div>
   </header>
 
   <main class="split">
 
+    <!-- LEFT PANEL -->
     <section class="panel panel-left">
       <div class="panel-header">
         <span class="panel-label">SOURCE</span>
@@ -39,30 +44,79 @@
         <input type="file" id="fileInput" accept=".md,.txt,.js,.ts,.py,.html,.css,.json,.jsx,.tsx,.rs,.go,.java,.cpp,.c,.yaml,.yml,.pdf" hidden />
       </div>
 
-      <div class="drop-zone" id="dropZone">
-        <div class="drop-cross">
-          <span class="cross-h"></span>
-          <span class="cross-v"></span>
+      <!-- Library -->
+      <div class="library" id="library">
+        <div class="library-empty" id="libraryEmpty">
+          <div class="drop-cross">
+            <span class="cross-h"></span>
+            <span class="cross-v"></span>
+          </div>
+          <p class="drop-title">DROP FILE</p>
+          <p class="drop-sub">.PDF .MD .TXT .JS .PY .TS .HTML .JSON</p>
         </div>
-        <p class="drop-title">DROP FILE</p>
-        <p class="drop-sub">.PDF .MD .TXT .JS .PY .TS .HTML .JSON</p>
+        <div class="library-list" id="libraryList"></div>
       </div>
 
+      <!-- PDF Viewer -->
+      <div class="pdf-viewer" id="pdfViewer" style="display:none">
+        <div class="pdf-toolbar">
+          <button class="pdf-nav" id="pdfPrev">PREV</button>
+          <span class="pdf-page-info" id="pdfPageInfo">1 / 1</span>
+          <button class="pdf-nav" id="pdfNext">NEXT</button>
+        </div>
+        <div class="pdf-canvas-wrap">
+          <canvas id="pdfCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Text viewer (non-PDF) -->
       <div class="source-scroll" id="sourceScroll">
         <pre class="source-content" id="sourceContent"></pre>
       </div>
 
-      <div class="file-bar" id="fileBar">
+      <!-- Time picker -->
+      <div class="time-picker" id="timePicker" style="display:none">
+        <div class="time-label">SESSION LENGTH</div>
+        <div class="time-options">
+          <button class="time-opt" data-minutes="60">1 HR</button>
+          <button class="time-opt" data-minutes="180">3 HR</button>
+          <button class="time-opt" data-minutes="360">6 HR</button>
+          <button class="time-opt" data-minutes="720">12 HR</button>
+          <button class="time-opt time-opt-custom" id="timeCustom">CUSTOM</button>
+        </div>
+        <div class="time-custom-row" id="timeCustomRow" style="display:none">
+          <input type="number" class="time-input" id="timeCustomVal" min="5" max="1440" placeholder="MINUTES" />
+          <button class="time-confirm" id="timeConfirmBtn">SET</button>
+        </div>
+        <div class="doc-meta" id="docMeta"></div>
+      </div>
+
+      <!-- Doc progress bar -->
+      <div class="doc-progress-bar" id="docProgressBar" style="display:none">
+        <div class="doc-progress-header">
+          <span class="doc-progress-label">DOCUMENT PROGRESS</span>
+          <span class="doc-progress-pct" id="docProgressPct">0%</span>
+        </div>
+        <div class="doc-progress-track">
+          <div class="doc-progress-fill" id="docProgressFill"></div>
+        </div>
+        <div class="doc-progress-remain" id="docProgressRemain"></div>
+      </div>
+
+      <!-- File bar -->
+      <div class="file-bar" id="fileBar" style="display:none">
         <span class="file-name" id="fileName"></span>
         <span class="file-words" id="fileWords"></span>
         <button class="btn-clear" id="clearBtn">CLEAR</button>
       </div>
 
-      <div class="teach-row" id="teachRow">
+      <!-- Teach row -->
+      <div class="teach-row" id="teachRow" style="display:none">
         <button class="btn-teach" id="teachBtn">TEACH ME THIS</button>
       </div>
     </section>
 
+    <!-- RIGHT PANEL -->
     <section class="panel panel-right">
       <div class="panel-header panel-header-right">
         <span class="panel-label">OUTPUT</span>
@@ -80,9 +134,9 @@
             <div class="empty-rule"></div>
             <div class="empty-steps">
               <div class="e-step"><span class="e-num">01</span><span class="e-text">UPLOAD SOURCE MATERIAL</span></div>
-              <div class="e-step"><span class="e-num">02</span><span class="e-text">SET LEARNING LEVEL</span></div>
-              <div class="e-step"><span class="e-num">03</span><span class="e-text">INITIATE LESSON</span></div>
-              <div class="e-step"><span class="e-num">04</span><span class="e-text">LEARN AT YOUR PACE</span></div>
+              <div class="e-step"><span class="e-num">02</span><span class="e-text">SET SESSION LENGTH</span></div>
+              <div class="e-step"><span class="e-num">03</span><span class="e-text">SET LEARNING LEVEL</span></div>
+              <div class="e-step"><span class="e-num">04</span><span class="e-text">INITIATE LESSON</span></div>
             </div>
           </div>
         </div>

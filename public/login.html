@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PACE — LOGIN</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="auth-body">
+
+  <div class="auth-wrap">
+
+    <div class="auth-header">
+      <span class="logo">PACE</span>
+      <span class="logo-sub">PROFILE · ANALYZE · CURATE · EDUCATE</span>
+    </div>
+
+    <div class="auth-box">
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin">LOGIN</button>
+        <button class="auth-tab" id="tabRegister">REGISTER</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div class="auth-form" id="formLogin">
+        <div class="field-group">
+          <label class="field-label">EMAIL</label>
+          <input type="email" class="field-input" id="loginEmail" placeholder="your@email.com" autocomplete="email" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">PASSWORD</label>
+          <input type="password" class="field-input" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <div class="auth-error" id="loginError"></div>
+        <button class="auth-submit" id="loginBtn">LOGIN</button>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div class="auth-form" id="formRegister" style="display:none">
+        <div class="field-group">
+          <label class="field-label">EMAIL</label>
+          <input type="email" class="field-input" id="regEmail" placeholder="your@email.com" autocomplete="email" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">PASSWORD</label>
+          <input type="password" class="field-input" id="regPassword" placeholder="Min. 8 characters" autocomplete="new-password" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">CONFIRM PASSWORD</label>
+          <input type="password" class="field-input" id="regConfirm" placeholder="••••••••" autocomplete="new-password" />
+        </div>
+        <div class="auth-error" id="regError"></div>
+        <button class="auth-submit" id="registerBtn">CREATE ACCOUNT</button>
+      </div>
+
+    </div>
+
+    <div class="auth-footer">
+      PACE · BETA · 2026
+    </div>
+
+  </div>
+
+  <script>
+    // Redirect if already logged in
+    if (localStorage.getItem('pace_token')) {
+      window.location.href = '/';
+    }
+
+    // Tab switching
+    const tabLogin    = document.getElementById('tabLogin');
+    const tabRegister = document.getElementById('tabRegister');
+    const formLogin   = document.getElementById('formLogin');
+    const formRegister = document.getElementById('formRegister');
+
+    tabLogin.addEventListener('click', () => {
+      tabLogin.classList.add('active');
+      tabRegister.classList.remove('active');
+      formLogin.style.display = 'flex';
+      formRegister.style.display = 'none';
+    });
+
+    tabRegister.addEventListener('click', () => {
+      tabRegister.classList.add('active');
+      tabLogin.classList.remove('active');
+      formRegister.style.display = 'flex';
+      formLogin.style.display = 'none';
+    });
+
+    // Login
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const email    = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const errEl    = document.getElementById('loginError');
+      errEl.textContent = '';
+
+      if (!email || !password) { errEl.textContent = 'ALL FIELDS REQUIRED'; return; }
+
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.textContent = 'LOGGING IN...';
+
+      try {
+        const res  = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (data.error) { errEl.textContent = data.error.toUpperCase(); return; }
+        localStorage.setItem('pace_token', data.token);
+        localStorage.setItem('pace_user', JSON.stringify(data.user));
+        window.location.href = '/';
+      } catch (err) {
+        errEl.textContent = 'CONNECTION ERROR';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'LOGIN';
+      }
+    });
+
+    // Enter key login
+    document.getElementById('loginPassword').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('loginBtn').click();
+    });
+
+    // Register
+    document.getElementById('registerBtn').addEventListener('click', async () => {
+      const email    = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+      const confirm  = document.getElementById('regConfirm').value;
+      const errEl    = document.getElementById('regError');
+      errEl.textContent = '';
+
+      if (!email || !password || !confirm) { errEl.textContent = 'ALL FIELDS REQUIRED'; return; }
+      if (password !== confirm) { errEl.textContent = 'PASSWORDS DO NOT MATCH'; return; }
+      if (password.length < 8) { errEl.textContent = 'PASSWORD MIN. 8 CHARACTERS'; return; }
+
+      const btn = document.getElementById('registerBtn');
+      btn.disabled = true;
+      btn.textContent = 'CREATING...';
+
+      try {
+        const res  = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (data.error) { errEl.textContent = data.error.toUpperCase(); return; }
+        localStorage.setItem('pace_token', data.token);
+        localStorage.setItem('pace_user', JSON.stringify(data.user));
+        window.location.href = '/';
+      } catch (err) {
+        errEl.textContent = 'CONNECTION ERROR';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'CREATE ACCOUNT';
+      }
+    });
+  </script>
+
+</body>
+</html>
